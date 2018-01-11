@@ -21,7 +21,7 @@
 # pylint: disable=too-many-arguments
 # pylint: disable=dangerous-default-value
 """Visualization module"""
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import re
 import copy
@@ -44,7 +44,7 @@ def _str2tuple(string):
     """
     return re.findall(r"\d+", string)
 
-def print_summary(symbol, shape=None, line_length=120, positions=[.44, .64, .74, 1.]):
+def print_summary(symbol, shape=None, line_length=120, positions=[.44, .64, .74, 1.], overrides=None, out=None):
     """Convert symbol for detail information.
 
     Parameters
@@ -57,6 +57,10 @@ def print_summary(symbol, shape=None, line_length=120, positions=[.44, .64, .74,
         Rotal length of printed lines
     positions: list
         Relative or absolute positions of log elements in each line.
+    overrides: dictionary
+        dictionary from levels to shape tuples (handles cases where the inferred shape logic fails)
+    out: file or None
+        if None, outputs to standard out. Otherwise, outputs to file
     Returns
     ------
     None
@@ -96,10 +100,10 @@ def print_summary(symbol, shape=None, line_length=120, positions=[.44, .64, .74,
             line += str(field)
             line = line[:positions[i]]
             line += ' ' * (positions[i] - len(line))
-        print(line)
-    print('_' * line_length)
+        print(line, file=out)
+    print('_' * line_length, file=out)
     print_row(to_display, positions)
-    print('=' * line_length)
+    print('=' * line_length, file=out)
     def print_layer_summary(node, out_shape):
         """print layer information
 
@@ -130,7 +134,10 @@ def print_summary(symbol, shape=None, line_length=120, positions=[.44, .64, .74,
                         else:
                             key = input_name
                         if key in shape_dict:
-                            shape = shape_dict[key][1:]
+                            if overrides is not None and key in overrides:
+                                shape = overrides[key]
+                            else:
+                                shape = shape_dict[key][1:]
                             pre_filter = pre_filter + int(shape[0])
         cur_param = 0
         if op == 'Convolution':
@@ -175,11 +182,14 @@ def print_summary(symbol, shape=None, line_length=120, positions=[.44, .64, .74,
                     out_shape = shape_dict[key][1:]
         total_params += print_layer_summary(nodes[i], out_shape)
         if i == len(nodes) - 1:
-            print('=' * line_length)
+            print('=' * line_length, file=out)
         else:
-            print('_' * line_length)
-    print('Total params: %s' % total_params)
-    print('_' * line_length)
+            print('_' * line_length, file=out)
+    print('Total params: %s' % total_params, file=out)
+    print('_' * line_length, file=out)
+    if out is not None:
+        print("Wrote summary to {}".format(out))
+
 
 def plot_network(symbol, title="plot", save_format='pdf', shape=None, node_attrs={},
                  hide_weights=True):
