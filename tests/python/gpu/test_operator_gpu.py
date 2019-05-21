@@ -699,7 +699,7 @@ def test_pooling_nhwc_with_convention():
                     check_consistency_NxM(symlist, ctx_list)
 
                     symlist = make_pooling_syms(kernel=(300,300), pool_type='max',
-                                                global_pool=True, name='pool')
+                                                global_pool=True, name='pool', pad=(0,0))
                     check_consistency_NxM(symlist, ctx_list)
 
 
@@ -715,7 +715,7 @@ def test_pooling_with_type():
     sym = mx.sym.Pooling(kernel=(3,3), pool_type='max', pooling_convention='full', name='pool')
     check_consistency(sym, ctx_list, rand_type=np.float16)
 
-    sym = mx.sym.Pooling(kernel=(300,300), pool_type='max', global_pool=True, name='pool')
+    sym = mx.sym.Pooling(kernel=(300,300), pool_type='max', global_pool=True, name='pool', pad=(0,0))
     check_consistency(sym, ctx_list, rand_type=np.float16)
 
 
@@ -949,6 +949,7 @@ def test_pooling_versions():
             # add other args as needed
             if global_pool:
                 pool_op_args['global_pool'] = True
+                pool_op_args['pad'] = (0, 0)
             else:
                 # Add pad and stride param if needed, plus randomly when it matches the default
                 if not is_default_pad(pad) or random_choice():
@@ -1034,7 +1035,7 @@ def test_pooling_versions():
 
         test_pooling_versions_helper(pool_op_list=pool_op_list,
                                      data=data, kernel=kernel, pad=None, stride=None,
-                                     pool_type=pool_type, global_pool=True, p_value=p_value,
+                                     pool_type=pool_type, global_pool=True, p_value=p_value, pad=(0, 0),
                                      count_include_pad=count_include_pad, tol=tol, dtype=dtype)
 
     # The various implementations of the standard pooling operator
@@ -1134,7 +1135,7 @@ def test_global_pooling():
     def test_1d_pooling(pool_type, p_value=2):
         data = (2, 3, 20)
         kernel = (4,)
-        pad = (2,)
+        pad = (0,)
         stride = (2,)
 
         ctx_list = []
@@ -1144,11 +1145,11 @@ def test_global_pooling():
 
         ctx_list.append({'ctx': mx.cpu(0), 'pool_data': data, 'type_dict': {'pool_data': np.float32}})
         sym_list.append(mx.sym.Pooling(kernel=kernel, pad=pad, stride=stride, pool_type=pool_type,
-                                       pooling_convention=pooling_convention, global_pool=True, name='pool', p_value=p_value))
+                                       pooling_convention=pooling_convention, global_pool=True, pad=(0,0), name='pool', p_value=p_value))
 
         ctx_list.append({'ctx': mx.cpu(0), 'pool_data': data, 'type_dict': {'pool_data': np.float32}})
         sym_list.append(mx.sym.Pooling(kernel=kernel, pool_type=pool_type,
-                                       pooling_convention=pooling_convention, global_pool=True, name='pool', p_value=p_value))
+                                       pooling_convention=pooling_convention, global_pool=True name='pool', p_value=p_value))
 
         ctx_list.append({'ctx': mx.cpu(0), 'pool_data': data, 'type_dict': {'pool_data': np.float32}})
         sym_list.append(mx.sym.Pooling(pool_type=pool_type,
@@ -1183,7 +1184,7 @@ def test_global_pooling():
     def test_2d_pooling(pool_type, p_value=2):
         data = (2, 3, 20, 20)
         kernel = (4, 4)
-        pad = (2, 2)
+        pad = (0, 0)
         stride = (2, 2)
 
         ctx_list = []
