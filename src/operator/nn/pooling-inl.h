@@ -179,16 +179,15 @@ class PoolingOp {
  public:
   void Init(PoolingParam p) {
     if (p.global_pool) {
-        int has_padding = 0;
         for (index_t i = 0; i < p.pad.ndim(); i++) {
-            has_padding += p.pad[i];
+            if (p.pad[i]) {
+                LOG(WARNING) << "Using global pooling with padding leads to incorrect results "
+                             << "and is only supported for backwards compatibility.\n"
+                             << "If you are training a new network it is recommended "
+                             << "that you set padding to 0.";
+                break;
+            }
         }
-        if (has_padding) {
-            LOG(WARNING) << "Using global pooling with padding leads to incorrect results "
-                         << "and is only supported for backwards compatibility.\n"
-                         << "If you are training a new network it is recommended "
-                         << "that you set padding to 0.";
-                         }
     }
     this->param_ = p;
   }
